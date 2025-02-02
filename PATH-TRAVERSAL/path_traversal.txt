@@ -1,0 +1,29 @@
+PATH TRAVERSAL
+
+* This vulnerability occures when loading any input using path. For example, path may occur in a linux file system command.
+
+Example: "cat file_name", in this case hacker may provide file_name as file:///etc/passwd, /etc/hostname ...
+
+
+DEFENSES THAT CAN BE BYPASSED
+
+* These are broken defenses. Therefore, they should never be used.
+
+-> Only allowing absolute path
+-> Stripping the ../ sequence NON-recursively
+-> Start path validation
+-> File extension check without paying attention to null characters.
+
+HOW TO PREVENT PATH TRAVERSAL ATTACKS?
+
+-> Most effective one is to avoid passing user supplied input to filesystem APIs altogether.
+-> Vlidate the user input before passing it to the path. Ideal is to make use of WHITELIST. If it is not possible, using only alphanumeric characters is also way. (Allowing only permitted content)
+-> After validating the user supplied input, append the input to the base directory and use a platform filesystem API to canonicalize the path. Verify the canonicalized path starts with the expected base directory.
+
+Example java code segment:
+
+    File file = new File(BASE_DIRECTORY, userSuppliedInput);
+    if (file.getCanonicalPath().startsWith(BASE_DIRECTORY)){
+        // process your file
+    }
+
