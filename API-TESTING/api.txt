@@ -1,0 +1,69 @@
+API RECON
+
+-> Identify the input data the API processes, including both compulsory and optional parameters
+-> The types of requests the API accepts such as supported HTTP methods and media formats
+-> Rate limits / Authentication mechanism
+-> Find other API endpoints
+
+
+
+API DOCUMENTATION EXPLORE
+
+-> /api
+-> /swagger/index.html 
+-> /openapi.json
+-> /api/swagger/v1
+-> /api/swagger
+-> /api 
+
+* Brute forcing the path is a better option. Burp pro payloads can be used for this purpose.
+
+
+HIDDEN PARAMETERS
+
+* We need to find hidden parameters and test mass assignment vulnerability. For this purpose, intruder of the Burp Suite can be used once again. There is a wordlist of common parameter names to replace existing parameters or add new parameters.
+
+
+SERVER SIDE PARAMETER POLLUTION
+
+* This happens when a website embeds user input in a server-side request to an internal API withoud adequate encoding or validation.
+* This vulnerability is sometimes referred as HTTP parameter pollution but this is also used to refer to WAF bypass techniques.
+
+-> use query syntax characters #, &, =, ?
+-> # is used to truncate the query
+-> It is essential to URL-encode the # character. Because we do not want the front end application the interpret as a fragment identifier.
+-> Overriding existing parameter is a good way to detect this vulnerability.
+
+Example: /users?name=peter%26name=carlos  where %26 is the encoded &
+
+
+SERVER SIDE PARAMETER POLLUTION IN REST API
+
+* Parameters are in the URL path, so testing should be according to this knowledge.
+* In this case, we can make use of path manipulations such as /../../v1/ to get another version of the REST API. But this should be URL encoded as %2f..%2f..%2fv1%2f and so on.
+
+TESTING SERVER SIDE PARAMETER POLLUTION IN STRUCTURED DATA FORMATS
+
+* If client side request takes parameters as JSON  format, we need '\' character to replace parameter as we wish.
+
+Example payload: "Alkım \", \"is_admin\":1"
+
+PREVENTION OF SERVER-SIDE PARAMETER POLLUTION
+
+-> Use an allowlist to define characters that do not need encoding
+-> Make sure all other user input is encoded before it is included in a server side request
+-> All user supplied input adheres to the expected format and structure
+
+
+
+HOW TO SECURE API?
+
+-> If your documentation exposes some unintended data, then make sure your documentation is NOT publicly accessible.
+-> Documentation must be up to date so that legit tester should be able to see.
+-> Use WHITELIST for valid HTTP methods.
+-> Content type should be validated for each HTTP request
+-> Error messages should be generic so that no data is exposed
+-> Each version of the API must be protected, not only  the current one
+
+
+
