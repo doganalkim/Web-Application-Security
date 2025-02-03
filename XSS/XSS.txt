@@ -1,0 +1,17 @@
+XSS
+
+* Cross Origin iframes are prevented from calling alert() from version 92 onward. Alternatively, print() function can be used for detection.
+
+
+Three Types Of XSS
+
+-> Reflected: Malicious script comes from current HTTP request
+-> Stored Malicious script comes from the DB
+-> Dom-based: Exists in the client-side code rather than server-side code
+
+
+XSS Payloads
+
+Custom tag: <xss autofocus tabindex=1 onfocus=alert(1)></xss>
+
+<svg><animatetransform onbegin=alert(1) attributeName=transform>
