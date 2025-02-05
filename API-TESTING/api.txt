@@ -64,9 +64,3 @@ HOW TO SECURE API?
 -> Content type should be validated for each HTTP request
 -> Error messages should be generic so that no data is exposed
 -> Each version of the API must be protected, not only  the current one
-
-
-* Jquery's $() selector can be used to inject malicious XSS payloads.
-* Recent Jquery prevents from giving HTML into this.
-* One way to trigger hashchange event without user interaction is the following.
--> <iframe src="https://vulnerable-website.com#" onload="this.src+='<img src=1 onerror=alert(1)>'" 
