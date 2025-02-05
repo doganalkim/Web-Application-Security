@@ -74,4 +74,6 @@ Explanation of this payload:
 Example payload:
 -> &apos;-alert(document.domain)-&apos;
 
+* Template literals are of the form: var input = `controllable data here`;
+* We can also attack into JavaScript Template Literals. In this case, we need to insert our code into ${...} to be evaluated.
 
