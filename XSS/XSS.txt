@@ -77,3 +77,11 @@ Example payload:
 * Template literals are of the form: var input = `controllable data here`;
 * We can also attack into JavaScript Template Literals. In this case, we need to insert our code into ${...} to be evaluated.
 
+DOM BASED XSS
+
+* There are some sinks
+-> document.write(....)
+-> innerHTML
+-> .attr(...)  ( For Jquery )
+
+* The innerHTML sink does not accept <script> elements on any modern browser, nor <svg onload .. > events fire. So, we need to use alternative elements like <img> or <iframe>. Event handlers can be used with those tags.
