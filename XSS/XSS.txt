@@ -104,6 +104,9 @@ DOM BASED XSS
 ->  " }-alert(1)// 
 * This payload first escapes the Json and then comments out the rest.
 
+EXPLOIT OF XSS
+---------------
+
 * The following payload can be used to steal autofill username & password.
 
 PAYLOAD: 
