@@ -83,6 +83,12 @@ DOM BASED XSS
 -> document.write(....)
 -> innerHTML
 -> .attr(...)  ( For Jquery )
+-> document.writeln()
+-> document.domain
+-> element.innerHTML
+-> element.outerHTML
+-> element.insertAdjacentHTML
+-> element.onevent
 
 * The innerHTML sink does not accept <script> elements on any modern browser, nor <svg onload .. > events fire. So, we need to use alternative elements like <img> or <iframe>. Event handlers can be used with those tags.
 
@@ -90,3 +96,10 @@ DOM BASED XSS
 * Recent Jquery prevents from giving HTML into this.
 * One way to trigger hashchange event without user interaction is the following.
 -> <iframe src="https://vulnerable-website.com#" onload="this.src+='<img src=1 onerror=alert(1)>'" 
+
+* Example payload for angular js: (For example, we can use double quote instead of single quote if single is encoded or escaped)
+-> {{$on.constructor('alert(1)')()}} 
+
+* If eval is used to evaluate json data to convert it into object, we can used the following payload.
+->  " }-alert(1)// 
+* This payload first escapes the Json and then comments out the rest.
