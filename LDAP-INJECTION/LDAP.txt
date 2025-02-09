@@ -1,0 +1,145 @@
+LDAP ( Lightweight Directory Access Protocol )
+----------------------------------------------
+
+* A protocol that makes it possible for applications to query user information rapidly.
+
+
+What is LDAP?
+-------------
+
+* LDAP is a protocol, so it does not specify how directory programs work. Instead, it's a form of language that allows users to find the information they need very quickly.
+
+* LDAP is a vender-neutral, so it can be used with a variety of different directory programs. Typically, a directory program contains data that is:
+	-> Descripive: Multiple points, such as name and location, come together to define an asset.
+	-> Static: The information does not change much, and when it does, the shifts are subtle. ,
+	-> Valueable: Data stored within the directory is critical to core business functions, and it's touched over and over again.
+
+* An LDAP query typically involves :
+	-> Session Connection: The user connects to the server via an LDAP port
+	-> Request: The user submits a query, such as an email lookup to the server.
+	-> Response: The LDAP protocol queries the directory, finds the information and delivers it to the user.
+	-> Completion: The user disconnects from the LDAP port.
+
+* There are two methods available for user authentication.
+	-> Simple: The correct name and password connect the user to server.
+	-> Simple Authentication and Security Layer ( SASL ): A secondary device such as Kerberos performs authentication before the user can connect. This is a good option for advanced security.
+
+* TLS is used to ensure the safety of LDAP messages.
+
+* People can tackle the operations:
+	-> Add
+	-> Delete
+	-> Search
+	-> Compare
+	-> Modify
+
+Some LDAP Terms
+---------------
+	-> Data Models: What type of information sit within your directory?
+	-> Distinguished Name (DN): A unique identifier of each entry that also describes location within the information tree.
+	-> Modificiations: These are requests from LDAP users to make to alther the data associated with an entry. Defined Modification Types include adding, deleting, replacing and increasing.
+	-> Relative Distinguished Name ( RDN ): This is a way of tying DNs together while specifying relative location.
+	-> Schema: The coding that underpins your LDAP is known as schema. You'll use this language to describe the format and attributes of each item that sits on the server.
+	-> URLs: A string that includes the address and port of a server along with other data that can define a group, provide location, or refer an operation to another server.
+	-> Uniform Resource Identifier ( URI ): a string of characters that defines a resource.
+
+
+LDAP INJECTION
+--------------
+
+Example Queries:
+
+-> (cn=Alkım*) matches anything with a common name beginning with the string "Alkım". '*' matches any character.
+-> (!(cn=Alkım*)) matches anything where the common name does not start with the string "Alkım"
+-> (&(cn=A*)(cn=*B)) uses and logical operator represented by &. This query matches entries that start with 'A' and end with 'B'.
+-> (|(cn=A*)(cn=B*)) uses or logical operator represented by |. This query matches entries whose common name start with either 'A' or 'B'.
+
+* Very similar to SQL injection and related code injection attacks, an LDAP injection vulnerability results when an application injects UNFILTERED user input directly into an LDAP statement.
+
+
+
+Type of LDAP Injection Attacks
+-----------------------------
+
+Access Control Bypass
+- - - - - - - - - - -
+
+* The query will be
+
+(&(USER=Uname)(PASSWORD=Passwd))
+
+* If an attacker submits a valid username with the payload John90)(&), then the query becomes
+
+(&(USER=John90)(&))(PASSWORD=Pwd))
+
+* Then, LDAP server will process only the first filter.
+
+Information Disclosure
+- - - - - - - - - - - -
+
+* The query will be
+
+(|(type=Resource1)(type=Resource2)) 
+
+* If an attacker submits a valid type  with the payload Jeans)(uid=*), then the qyery becomes
+
+(|(type=Jeans)(uid=*))(type=T-Shirts))
+
+* This query will show all of the Jeans
+
+Blind LDAP injections
+- - - - - - - - - - -
+
+-> Imagine an online shop that can list all Puma shirts from an LDAP directory. But the error messages are not returned. The query is:
+
+(&(objectClass=Shirt)(type=Puma*))
+
+-> *)objectClass=*))(&(objectClass=void is injected and the LDAP query looks like the following.
+
+(&(objectClass=*)(objectClass=*))(&(objectClass=void)(type=Puma*))
+
+
+
+HOW TO PREVENT LDAP INJECTION?
+------------------------------
+
+1- Escape all variable using the right LDAP encoding function
+	-> Encoding for search query
+	-> Encoding for DN
+
+
+Distinguished Name Escaping: 
+	Characters to be allowed: * ( ) . & - _ [ ] ` ~ | @ $ % ^ ? : { } ! '
+	Characters to block: \ # + < > , ; " =
+
+Search Filter Escaping:
+	Chars to escape: * ( ) \ NUL
+
+Safe Java Example:
+	
+	// String userSN = "Sherlock Holmes"; // Valid
+	// String userPassword = "secret2"; // Valid
+	// ... beginning of LDAPInjection.searchRecord()...
+	sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+	String base = "dc=example,dc=com";
+
+	if (!userSN.matches("[\\w\\s]*") || !userPassword.matches("[\\w]*")) {
+	 	throw new IllegalArgumentException("Invalid input");
+	}
+
+	String filter = "(&(sn = " + userSN + ")(userPassword=" + userPassword + "))";
+	// ... remainder of LDAPInjection.searchRecord()... 
+
+IMPORTANT: Normalization of user input must occur before the validation step
+
+Safe C Sharp Example:
+
+* We have LDAP encoding functions.
+
+-> Encoder.LdapFilterEncode(string), Encoder.LdapDistinguishedNameEncode(string) and Encoder.LdapDistinguishedNameEncode(string, bool, bool) 
+
+
+2- Use Frameworks that automatically protect from LDAP injection
+	-> LINQ to LDAP for safe .NET
+
+
