@@ -28,6 +28,8 @@ Example payload:
 
 -> javascript:alert() payload is used when user supplied input is directly placed into href tag. 
 
+-> data:text/javascript;base64,YWxlcnQoMSk7  can be used when src attribute of script tag is the attack surface.
+
 -> We can make use of canonical tags for XSS detection. 
 Example payloads: 
 - <input type="hidden" accesskey="X" onclick="alert(1)">
